@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Node / Frontend
+node_modules/
+frontend/out/
+frontend/.next/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+firebase-debug.log
+
+# ADK
+.adk/
+
+# IDE
+.vscode/
+.idea/
+
+# Firebase
+.firebase/
+
+# OS
+.DS_Store
+Thumbs.db

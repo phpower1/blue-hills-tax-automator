@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+.adk/
+.env
+*.log
+*.ps1
+*.pyc
+.git/
+.gitignore
+.gemini/
+tax_automator_prd.md

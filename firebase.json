@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Blue Hills Tax Automator",
+        "supportEmail": "phpower1@gmail.com"
+      }
+    }
+  }
+}

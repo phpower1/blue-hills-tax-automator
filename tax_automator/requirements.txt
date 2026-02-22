@@ -1,0 +1,5 @@
+google-adk
+firebase-admin
+google-cloud-firestore
+fastapi
+uvicorn
