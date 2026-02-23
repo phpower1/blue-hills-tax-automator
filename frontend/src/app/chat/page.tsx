@@ -365,27 +365,26 @@ export default function ChatPage() {
                 </div>
 
                 {/* Camera Preview */}
-                <AnimatePresence>
-                    {cameraActive && (
-                        <motion.div
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            ref={videoPreviewRef}
-                            style={{
-                                position: "absolute",
-                                bottom: 80,
-                                right: 24,
-                                width: 120,
-                                height: 120,
-                                borderRadius: "50%",
-                                overflow: "hidden",
-                                border: "3px solid #06b6d4",
-                                boxShadow: "0 0 20px rgba(6, 182, 212, 0.3)",
-                            }}
-                        />
-                    )}
-                </AnimatePresence>
+                <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: cameraActive ? 1 : 0, opacity: cameraActive ? 1 : 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    ref={videoPreviewRef}
+                    style={{
+                        position: "absolute",
+                        bottom: 80,
+                        right: 24,
+                        width: 120,
+                        height: 120,
+                        borderRadius: "50%",
+                        overflow: "hidden",
+                        border: "3px solid #06b6d4",
+                        boxShadow: "0 0 20px rgba(6, 182, 212, 0.3)",
+                        pointerEvents: cameraActive ? "auto" : "none",
+                        backgroundColor: "#000",
+                        zIndex: 10,
+                    }}
+                />
 
                 {/* Input Bar */}
                 <div
