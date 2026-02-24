@@ -41,9 +41,10 @@ function docToReceipt(id: string, data: DocumentData): Receipt {
 }
 
 export function subscribeToReceipts(
+    userId: string,
     callback: (receipts: Receipt[]) => void
 ): () => void {
-    const q = query(collection(db, "receipts"), orderBy("__name__", "desc"));
+    const q = query(collection(db, "receipts"), where("user_id", "==", userId), orderBy("__name__", "desc"));
 
     return onSnapshot(q, (snapshot: QuerySnapshot) => {
         const receipts = snapshot.docs.map((doc) =>
@@ -54,11 +55,13 @@ export function subscribeToReceipts(
 }
 
 export function subscribeToReceiptsByStatus(
+    userId: string,
     status: string,
     callback: (receipts: Receipt[]) => void
 ): () => void {
     const q = query(
         collection(db, "receipts"),
+        where("user_id", "==", userId),
         where("status", "==", status)
     );
 

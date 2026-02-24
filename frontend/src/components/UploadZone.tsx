@@ -3,8 +3,10 @@
 import { useCallback, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { uploadReceipt, type UploadProgress } from "@/lib/storage";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function UploadZone() {
+    const { user } = useAuth();
     const [isDragging, setIsDragging] = useState(false);
     const [uploads, setUploads] = useState<
         { id: string; name: string; progress: UploadProgress }[]
@@ -13,6 +15,8 @@ export default function UploadZone() {
     const cameraInputRef = useRef<HTMLInputElement>(null);
 
     const handleFiles = useCallback((files: FileList | File[]) => {
+        if (!user) return; // Must be logged in
+
         Array.from(files).forEach((file) => {
             if (!file.type.startsWith("image/")) return;
 
@@ -22,7 +26,7 @@ export default function UploadZone() {
                 { id, name: file.name, progress: { progress: 0, state: "running" } },
             ]);
 
-            uploadReceipt(file, (progress) => {
+            uploadReceipt(file, user.uid, (progress) => {
                 setUploads((prev) =>
                     prev.map((u) => (u.id === id ? { ...u, progress } : u))
                 );

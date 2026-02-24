@@ -9,6 +9,7 @@ export interface UploadProgress {
 
 export async function uploadReceipt(
     file: File,
+    userId: string,
     onProgress?: (progress: UploadProgress) => void
 ): Promise<string> {
     const timestamp = Date.now();
@@ -42,6 +43,7 @@ export async function uploadReceipt(
                     // Create Firestore document with status "new" to trigger the agent
                     const docRef = await addDoc(collection(db, "receipts"), {
                         status: "new",
+                        user_id: userId,
                         original_filename: file.name,
                         gcs_uri: `gs://${storageRef.bucket}/${storagePath}`,
                         image_url: downloadURL,

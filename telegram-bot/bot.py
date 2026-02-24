@@ -87,7 +87,7 @@ def categorize(description: str) -> str:
     return "Uncategorized"
 
 
-def store_receipt(data: dict, telegram_user: str) -> str:
+def store_receipt(data: dict, telegram_user: str, firebase_uid: str) -> str:
     """Store receipt to Firestore using deterministic ID to prevent duplicates."""
     store = data.get('store', 'Unknown')
     date = data.get('date', datetime.now().strftime('%Y-%m-%d'))
@@ -105,6 +105,7 @@ def store_receipt(data: dict, telegram_user: str) -> str:
         'description': data.get('description', ''),
         'source': 'telegram',
         'telegram_user': telegram_user,
+        'user_id': firebase_uid,
         'status': 'processed' if amount < 500 else 'needs_approval',
         'created_at': firestore.SERVER_TIMESTAMP,
     })
@@ -113,9 +114,15 @@ def store_receipt(data: dict, telegram_user: str) -> str:
 
 async def handle_photo(update: Update):
     """Process a receipt photo."""
-    chat_id = update.message.chat_id
+    chat_id = str(update.message.chat_id)
     user = update.message.from_user
     username = user.username or user.first_name or "Unknown"
+
+    link_doc = db.collection("telegram_links").document(chat_id).get()
+    if not link_doc.exists:
+        await bot.send_message(chat_id, "⚠️ Please link your account first by typing `/link <code>` from your web dashboard.", parse_mode=ParseMode.MARKDOWN)
+        return
+    firebase_uid = link_doc.to_dict()["firebase_uid"]
 
     await bot.send_message(chat_id, "📸 Got your receipt! Analyzing with Gemini AI...")
 
@@ -148,7 +155,7 @@ async def handle_photo(update: Update):
             data['category'] = categorize(data['description'])
 
         # Store to Firestore
-        doc_id = store_receipt(data, username)
+        doc_id = store_receipt(data, username, firebase_uid)
 
         # Format response
         amount = float(data.get('amount', 0))
@@ -182,8 +189,24 @@ async def handle_photo(update: Update):
 
 async def handle_text(update: Update):
     """Handle text messages."""
-    chat_id = update.message.chat_id
-    text = update.message.text
+    chat_id = str(update.message.chat_id)
+    text = update.message.text.strip()
+
+    if text.startswith("/link "):
+        code = text.split(" ")[1].strip()
+        doc_ref = db.collection("link_codes").document(code)
+        doc = doc_ref.get()
+        if doc.exists:
+            data = doc.to_dict()
+            db.collection("telegram_links").document(chat_id).set({
+                "firebase_uid": data["firebase_uid"],
+                "created_at": firestore.SERVER_TIMESTAMP
+            })
+            doc_ref.delete()
+            await bot.send_message(chat_id, "✅ Account successfully linked! You can now send receipts.")
+        else:
+            await bot.send_message(chat_id, "❌ Invalid or expired linking code.")
+        return
 
     if text == "/start":
         await bot.send_message(
@@ -209,6 +232,13 @@ async def handle_text(update: Update):
             "*💬 Send a text* to ask tax questions",
             parse_mode=ParseMode.MARKDOWN,
         )
+        return
+
+    # User must be linked to use AI text
+    link_doc = db.collection("telegram_links").document(chat_id).get()
+    if not link_doc.exists:
+        text_reply = "⚠️ Please link your account first by typing `/link <code>` from your web dashboard."
+        await bot.send_message(chat_id, text_reply, parse_mode=ParseMode.MARKDOWN)
         return
 
     # Use Gemini for text responses

@@ -120,93 +120,98 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
     );
 }
 
+import TelegramLinker from "./TelegramLinker";
+
 function UserProfile() {
     const { user, signOut } = useAuth();
 
     if (!user) return null;
 
     return (
-        <div
-            style={{
-                padding: "12px 16px",
-                borderRadius: 12,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-            }}
-        >
-            {user.photoURL ? (
-                <img
-                    src={user.photoURL}
-                    alt=""
-                    style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        flexShrink: 0,
-                    }}
-                    referrerPolicy="no-referrer"
-                />
-            ) : (
-                <div
-                    style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        flexShrink: 0,
-                    }}
-                >
-                    {user.displayName?.[0] || "U"}
-                </div>
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                    style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "#f1f5f9",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    {user.displayName || "User"}
-                </div>
-                <div
-                    style={{
-                        fontSize: 11,
-                        color: "#64748b",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    {user.email}
-                </div>
-            </div>
-            <button
-                onClick={signOut}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div
                 style={{
-                    background: "none",
-                    border: "none",
-                    color: "#64748b",
-                    cursor: "pointer",
-                    fontSize: 16,
-                    padding: 4,
-                    flexShrink: 0,
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
                 }}
-                title="Sign out"
             >
-                ↪
-            </button>
+                {user.photoURL ? (
+                    <img
+                        src={user.photoURL}
+                        alt=""
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            flexShrink: 0,
+                        }}
+                        referrerPolicy="no-referrer"
+                    />
+                ) : (
+                    <div
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 14,
+                            fontWeight: 600,
+                            flexShrink: 0,
+                        }}
+                    >
+                        {user.displayName?.[0] || "U"}
+                    </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                        style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#f1f5f9",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {user.displayName || "User"}
+                    </div>
+                    <div
+                        style={{
+                            fontSize: 11,
+                            color: "#64748b",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {user.email}
+                    </div>
+                </div>
+                <button
+                    onClick={signOut}
+                    style={{
+                        background: "none",
+                        border: "none",
+                        color: "#64748b",
+                        cursor: "pointer",
+                        fontSize: 16,
+                        padding: 4,
+                        flexShrink: 0,
+                    }}
+                    title="Sign out"
+                >
+                    ↪
+                </button>
+            </div>
+            <TelegramLinker />
         </div>
     );
 }

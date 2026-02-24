@@ -14,7 +14,8 @@ def store_receipt_to_firestore(
     date: str,
     amount: float,
     category: str,
-    image_url: Optional[str] = None
+    image_url: Optional[str] = None,
+    user_id: Optional[str] = None
 ) -> str:
     """
     Saves receipt metadata and optional image URL to Firestore.
@@ -25,6 +26,7 @@ def store_receipt_to_firestore(
         amount: The total amount of the transaction.
         category: The potential tax category.
         image_url: The URL of the receipt image in Google Cloud Storage (optional).
+        user_id: The ID of the user who owns this receipt (optional).
 
     Returns:
         The ID of the created document in Firestore.
@@ -40,6 +42,7 @@ def store_receipt_to_firestore(
         'amount': amount,
         'category': category,
         'image_url': image_url,
+        'user_id': user_id,
         'status': 'processed' if amount < 500 else 'needs_approval'
     })
     return f"Receipt stored successfully with ID: {doc_ref.id}"

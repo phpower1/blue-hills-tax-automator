@@ -4,19 +4,23 @@ import { useEffect, useState } from "react";
 import { subscribeToReceipts, type Receipt } from "@/lib/firestore";
 import StatsBar from "@/components/StatsBar";
 import ReceiptCard from "@/components/ReceiptCard";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
 
   useEffect(() => {
-    const unsub = subscribeToReceipts((data) => {
+    if (!user) return;
+
+    const unsub = subscribeToReceipts(user.uid, (data) => {
       setReceipts(data);
       setLoading(false);
     });
     return unsub;
-  }, []);
+  }, [user]);
 
   const filtered =
     filter === "all" ? receipts : receipts.filter((r) => r.status === filter);

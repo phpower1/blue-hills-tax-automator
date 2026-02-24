@@ -4,18 +4,22 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { subscribeToReceipts, type Receipt } from "@/lib/firestore";
 import StatusBadge from "@/components/StatusBadge";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function ReportsPage() {
+    const { user } = useAuth();
     const [receipts, setReceipts] = useState<Receipt[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsub = subscribeToReceipts((data) => {
+        if (!user) return;
+
+        const unsub = subscribeToReceipts(user.uid, (data) => {
             setReceipts(data);
             setLoading(false);
         });
         return unsub;
-    }, []);
+    }, [user]);
 
     const completed = receipts.filter((r) => r.status === "completed");
 

@@ -61,9 +61,12 @@ async def process_receipt(request: Request):
 
     # Build the agent prompt
     image_uri = data.get("gcs_uri") or data.get("imageUrl")
+    user_id = data.get("user_id")
     prompt = f"Analyze the receipt with ID: {receipt_id}."
     if image_uri:
         prompt += f"\nThe receipt image is available at: {image_uri}"
+    if user_id:
+        prompt += f"\nThe user_id is: {user_id}. You MUST pass this user_id to the store_receipt_to_firestore tool."
 
     logger.info(f"Invoking agent for receipt {receipt_id}")
 

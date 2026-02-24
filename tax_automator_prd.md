@@ -18,7 +18,7 @@ Storage: Google Cloud Storage (for raw receipt images).
 
 Backend: Python (FastAPI) deployed on Google Cloud Run.
 
-Frontend: Next.js (React) + Tailwind CSS + Magic UI components.
+Frontend: Next.js (React) + Tailwind CSS.
 
 Protocol: A2A (Agent-to-Agent) for specialist handoffs.
 
