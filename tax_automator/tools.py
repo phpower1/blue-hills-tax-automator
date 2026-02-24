@@ -1,7 +1,7 @@
 import firebase_admin
 from firebase_admin import firestore
 from typing import Optional
-
+import hashlib
 
 # Initialize Firestore
 if not firebase_admin._apps:
@@ -29,7 +29,11 @@ def store_receipt_to_firestore(
     Returns:
         The ID of the created document in Firestore.
     """
-    doc_ref = db.collection('receipts').document()
+    # Create deterministic ID to prevent duplicates
+    unique_string = f"{store.strip().lower()}_{date.strip()}_{amount}"
+    doc_id = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
+    
+    doc_ref = db.collection('receipts').document(doc_id)
     doc_ref.set({
         'store': store,
         'date': date,

@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from datetime import datetime
+import hashlib
 
 import firebase_admin
 from firebase_admin import firestore
@@ -32,7 +33,11 @@ model = GenerativeModel("gemini-2.5-flash")
 app = Flask(__name__)
 bot = Bot(token=TELEGRAM_TOKEN)
 
-RECEIPT_PROMPT = """You are a tax specialist. Analyze this receipt image and extract:
+RECEIPT_PROMPT = """You are a tax specialist. Analyze this image.
+If it is clearly NOT a receipt, invoice, or tax-related document (e.g., a selfie, a cat, a landscape), respond ONLY with this JSON:
+{"error": "not_tax_document"}
+
+Otherwise, extract:
 1. Store/vendor name
 2. Date (YYYY-MM-DD format)
 3. Total amount (number only, no currency symbol)
@@ -83,12 +88,18 @@ def categorize(description: str) -> str:
 
 
 def store_receipt(data: dict, telegram_user: str) -> str:
-    """Store receipt to Firestore."""
-    doc_ref = db.collection('receipts').document()
+    """Store receipt to Firestore using deterministic ID to prevent duplicates."""
+    store = data.get('store', 'Unknown')
+    date = data.get('date', datetime.now().strftime('%Y-%m-%d'))
     amount = float(data.get('amount', 0))
+    
+    unique_string = f"{store.strip().lower()}_{date.strip()}_{amount}"
+    doc_id = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
+    
+    doc_ref = db.collection('receipts').document(doc_id)
     doc_ref.set({
-        'store': data.get('store', 'Unknown'),
-        'date': data.get('date', datetime.now().strftime('%Y-%m-%d')),
+        'store': store,
+        'date': date,
         'amount': amount,
         'category': data.get('category', 'Uncategorized'),
         'description': data.get('description', ''),
@@ -124,6 +135,13 @@ async def handle_photo(update: Update):
             text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
         data = json.loads(text)
+
+        if data.get("error") == "not_tax_document":
+            await bot.send_message(
+                chat_id,
+                "⚠️ This doesn't look like a receipt or tax document. Please try sending a valid receipt or invoice!"
+            )
+            return
 
         # Double-check category
         if data.get('category') == 'Uncategorized' and data.get('description'):
