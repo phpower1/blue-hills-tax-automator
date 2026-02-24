@@ -86,6 +86,30 @@ graph TB
 * **Database & Storage:** Firebase Firestore, Firebase Cloud Storage, Firebase Hosting
 * **Frontend:** Next.js (TypeScript), React, Tailwind CSS, Framer Motion
 
+## 🧪 Reproducible Testing Instructions
+
+For hackathon judges and evaluators, you can test the entire multimodal flow using our deployed services without needing to run anything locally:
+
+### Part 1: Talk to the Tax Assistant (Gemini Live API)
+1. Go to the web dashboard: [blue-hills-tax-automator.web.app](https://blue-hills-tax-automator.web.app/chat)
+2. Click the **Enable Mic** button to start a real-time voice session.
+3. Speak normally: *"Hi, I bought a new laptop for my business, how do I deduct this?"* The assistant will talk back via native audio.
+4. Click **Share Camera** and physically hold up a receipt to your webcam. Ask *"Can you read this receipt for me?"* to test the multimodal vision capabilities.
+
+### Part 2: Extract receipts via Telegram Bot (Vertex AI)
+1. Open Telegram and search for **[@bluehills_tax_bot](https://t.me/bluehills_tax_bot)**.
+2. Send the `/start` command.
+3. Use your phone to snap a photo of any receipt (a restaurant bill, gas receipt, etc.) and send it to the bot.
+4. The bot will instantly extract the data, calculate the amount, categorize it into an IRS tax bucket, and save it.
+5. *Safeguard Test:* Try sending a random photo (like a selfie or a coffee mug) to see how the bot gracefully rejects non-tax documents.
+
+### Part 3: View the Aggregated Dashboard
+1. Go to the main dashboard: [blue-hills-tax-automator.web.app](https://blue-hills-tax-automator.web.app/)
+2. You will instantly see the receipt you just sent via Telegram appear on the screen automatically (thanks to Firebase Realtime listeners).
+3. Try uploading another receipt directly through the **Upload** tab using the native web camera feature.
+
+---
+
 ## 🛠️ Setup & Local Development
 
 This repository consists of multiple services:
