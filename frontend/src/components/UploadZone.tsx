@@ -10,6 +10,7 @@ export default function UploadZone() {
         { id: string; name: string; progress: UploadProgress }[]
     >([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
 
     const handleFiles = useCallback((files: FileList | File[]) => {
         Array.from(files).forEach((file) => {
@@ -35,6 +36,10 @@ export default function UploadZone() {
                 );
             });
         });
+
+        // Reset inputs so the same file/photo can be uploaded twice if needed
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
     }, []);
 
     const handleDrop = useCallback(
@@ -54,7 +59,6 @@ export default function UploadZone() {
                 style={{
                     padding: "64px 32px",
                     textAlign: "center" as const,
-                    cursor: "pointer",
                 }}
                 onDragOver={(e) => {
                     e.preventDefault();
@@ -62,13 +66,20 @@ export default function UploadZone() {
                 }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
             >
                 <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     multiple
+                    style={{ display: "none" }}
+                    onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                />
+                <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
                     style={{ display: "none" }}
                     onChange={(e) => e.target.files && handleFiles(e.target.files)}
                 />
@@ -79,11 +90,56 @@ export default function UploadZone() {
                 >
                     📸
                 </motion.div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: "#f1f5f9", marginBottom: 8 }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: "#f1f5f9", marginBottom: 16 }}>
                     Drop receipt photos here
                 </div>
+
+                <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 16 }}>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            fileInputRef.current?.click();
+                        }}
+                        style={{
+                            padding: "10px 20px",
+                            borderRadius: 10,
+                            border: "none",
+                            fontSize: 14,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            background: "rgba(255,255,255,0.06)",
+                            color: "#f1f5f9",
+                            transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                    >
+                        Browse Files
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            cameraInputRef.current?.click();
+                        }}
+                        style={{
+                            padding: "10px 20px",
+                            borderRadius: 10,
+                            border: "none",
+                            fontSize: 14,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
+                            color: "#fff",
+                            transition: "all 0.2s ease",
+                            boxShadow: "0 0 15px rgba(6, 182, 212, 0.3)",
+                        }}
+                    >
+                        Take Photo
+                    </button>
+                </div>
+
                 <div style={{ fontSize: 13, color: "#64748b" }}>
-                    or click to browse · Supports JPG, PNG, HEIC
+                    Supports JPG, PNG, HEIC
                 </div>
             </div>
 
