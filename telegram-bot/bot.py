@@ -31,7 +31,6 @@ model = GenerativeModel("gemini-2.5-flash")
 
 # ─── Flask App ───
 app = Flask(__name__)
-bot = Bot(token=TELEGRAM_TOKEN)
 
 RECEIPT_PROMPT = """You are a tax specialist. Analyze this image.
 If it is clearly NOT a receipt, invoice, or tax-related document (e.g., a selfie, a cat, a landscape), respond ONLY with this JSON:
@@ -112,7 +111,7 @@ def store_receipt(data: dict, telegram_user: str, firebase_uid: str) -> str:
     return doc_ref.id
 
 
-async def handle_photo(update: Update):
+async def handle_photo(update: Update, bot: Bot):
     """Process a receipt photo."""
     chat_id = str(update.message.chat_id)
     user = update.message.from_user
@@ -187,7 +186,7 @@ async def handle_photo(update: Update):
         )
 
 
-async def handle_text(update: Update):
+async def handle_text(update: Update, bot: Bot):
     """Handle text messages."""
     chat_id = str(update.message.chat_id)
     text = update.message.text.strip()
@@ -265,20 +264,19 @@ def webhook():
     data = request.get_json()
     logger.info(f"Received update: {json.dumps(data)[:200]}")
 
-    update = Update.de_json(data, bot)
+    async def process_update():
+        async with Bot(token=TELEGRAM_TOKEN) as bot:
+            update = Update.de_json(data, bot)
+            if update.message:
+                if update.message.photo:
+                    await handle_photo(update, bot)
+                elif update.message.text:
+                    await handle_text(update, bot)
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     try:
-        if update.message:
-            if update.message.photo:
-                loop.run_until_complete(handle_photo(update))
-            elif update.message.text:
-                loop.run_until_complete(handle_text(update))
+        asyncio.run(process_update())
     except Exception as e:
         logger.error(f"Webhook error: {e}", exc_info=True)
-    finally:
-        loop.close()
 
     return jsonify({"ok": True})
 
