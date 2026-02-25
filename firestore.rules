@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /receipts/{receiptId} {
+      allow read: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      allow update: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+    }
+    match /link_codes/{codeId} {
+      allow read, write: if request.auth != null &&
+        (resource == null || resource.data.firebase_uid == request.auth.uid) &&
+        (request.resource == null || request.resource.data.firebase_uid == request.auth.uid);
+    }
+    match /telegram_links/{linkId} {
+      allow read, write: if request.auth != null &&
+        (resource == null || resource.data.firebase_uid == request.auth.uid) &&
+        (request.resource == null || request.resource.data.firebase_uid == request.auth.uid);
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

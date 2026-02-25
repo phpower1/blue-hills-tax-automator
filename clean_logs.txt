@@ -1,0 +1,20 @@
+[2026-02-25T04:51:57.317970Z] INFO:     Finished server process [1]
+[2026-02-25T04:51:57.317819Z] INFO:     Application shutdown complete.
+[2026-02-25T04:51:57.317476Z] INFO:     Waiting for application shutdown.
+[2026-02-25T04:51:57.216133Z] INFO:     Shutting down
+[2026-02-25T04:36:50.874768Z] Default STARTUP TCP probe succeeded after 1 attempt for container "receipt-processor-1" on port 8080.
+[2026-02-25T04:36:50.874153Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T04:36:50.873187Z] INFO:     Application startup complete.
+[2026-02-25T04:36:50.872841Z] INFO:     Waiting for application startup.
+[2026-02-25T04:36:50.872767Z] INFO:     Started server process [1]
+[2026-02-25T04:36:43.462824Z] Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+[2026-02-25T02:56:59.809392Z] INFO:     Finished server process [1]
+[2026-02-25T02:56:59.809225Z] INFO:     Application shutdown complete.
+[2026-02-25T02:56:59.808939Z] INFO:     Waiting for application shutdown.
+[2026-02-25T02:56:59.707572Z] INFO:     Shutting down
+[2026-02-25T02:41:55.057216Z] Default STARTUP TCP probe succeeded after 1 attempt for container "receipt-processor-1" on port 8080.
+[2026-02-25T02:41:55.056749Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T02:41:55.055899Z] INFO:     Application startup complete.
+[2026-02-25T02:41:55.055614Z] INFO:     Waiting for application startup.
+[2026-02-25T02:41:55.055581Z] INFO:     Started server process [1]
+[2026-02-25T02:41:45.838438Z] Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.

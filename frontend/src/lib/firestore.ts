@@ -44,12 +44,21 @@ export function subscribeToReceipts(
     userId: string,
     callback: (receipts: Receipt[]) => void
 ): () => void {
-    const q = query(collection(db, "receipts"), where("user_id", "==", userId), orderBy("__name__", "desc"));
+    const q = query(
+        collection(db, "receipts"),
+        where("user_id", "==", userId)
+    );
 
     return onSnapshot(q, (snapshot: QuerySnapshot) => {
-        const receipts = snapshot.docs.map((doc) =>
+        let receipts = snapshot.docs.map((doc) =>
             docToReceipt(doc.id, doc.data())
         );
+        // Sort by created_at descending in memory
+        receipts.sort((a, b) => {
+            const timeA = a.created_at?.toMillis() || 0;
+            const timeB = b.created_at?.toMillis() || 0;
+            return timeB - timeA;
+        });
         callback(receipts);
     });
 }

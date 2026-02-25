@@ -6,5 +6,11 @@
         "supportEmail": "phpower1@gmail.com"
       }
     }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

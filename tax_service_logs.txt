@@ -1,0 +1,210 @@
+[2026-02-25T05:35:33.078346Z] INFO:     169.254.169.126:55286 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T05:35:33.077881Z] INFO:app:Document status is 'processing', skipping
+[2026-02-25T05:35:33.036101Z] INFO:app:Processing receipt egJvdbmWlE5a5tBVepYb
+[2026-02-25T05:35:33.036069Z] INFO:app:Received /process_receipt request
+[2026-02-25T05:35:21.393886Z] Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/protocols/http/h11_impl.py", line 410, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1160, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 119, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 105, in app
+    response = await f(request)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 431, in app
+    raw_response = await run_endpoint_function(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 313, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/app/app.py", line 67, in process_receipt
+    parts = [types.Part.from_text(prompt)]
+NameError: name 'types' is not defined. Did you mean: 'type'?
+[2026-02-25T05:35:21.393831Z] ERROR:    Exception in ASGI application
+[2026-02-25T05:35:21.372493Z] INFO:     169.254.169.126:39266 - "POST /process_receipt HTTP/1.1" 500 Internal Server Error
+[2026-02-25T05:35:20.966175Z] INFO:app:Processing receipt egJvdbmWlE5a5tBVepYb
+[2026-02-25T05:35:20.966168Z] INFO:app:Received /process_receipt request
+[2026-02-25T05:35:19.930561Z]   warnings.warn(message, FutureWarning)
+[2026-02-25T05:35:19.930548Z] /usr/local/lib/python3.10/site-packages/google/api_core/_python_version_support.py:275: FutureWarning: You are using a Python version (3.10.19) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+[2026-02-25T05:33:12.581999Z] INFO:     Finished server process [1]
+[2026-02-25T05:33:12.581904Z] INFO:     Application shutdown complete.
+[2026-02-25T05:33:12.581703Z] INFO:     Waiting for application shutdown.
+[2026-02-25T05:33:12.480433Z] INFO:     Shutting down
+[2026-02-25T05:32:27.949863Z] Default STARTUP TCP probe succeeded after 1 attempt for container "tax-automator-service-1" on port 8080.
+[2026-02-25T05:32:27.949341Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T05:32:27.948253Z] INFO:     Application startup complete.
+[2026-02-25T05:32:27.947994Z] INFO:     Waiting for application startup.
+[2026-02-25T05:32:27.947950Z] INFO:     Started server process [2]
+[2026-02-25T05:32:25.313663Z] Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+[2026-02-25T05:18:08.995384Z] INFO:     169.254.169.126:32780 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T05:18:08.917599Z] INFO:tax_automator.app:Agent: OK. I have stored the receipt from Shell dated 2023-07-15 for $45.23 and categorized it as "Auto Expenses". The receipt ID is ozT2fuyoRvuR7scYI8P6.
+[2026-02-25T05:18:08.916527Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T05:18:08.289783Z] INFO:     169.254.169.126:32790 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T05:18:08.289357Z] INFO:tax_automator.app:Document status is 'processed', skipping
+[2026-02-25T05:18:08.236328Z] INFO:tax_automator.app:Processing receipt ozT2fuyoRvuR7scYI8P6
+[2026-02-25T05:18:08.236271Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T05:18:08.162553Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T05:18:08.019074Z] WARNING:google_genai.types:Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+[2026-02-25T05:18:08.018960Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T05:18:07.006165Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T05:18:06.967901Z] INFO:tax_automator.app:Invoking agent for receipt qW7AWeRdDqOa9tF4Cyll
+[2026-02-25T05:18:06.867607Z] INFO:tax_automator.app:Processing receipt qW7AWeRdDqOa9tF4Cyll
+[2026-02-25T05:18:06.867574Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T05:10:01.386349Z] INFO:     169.254.169.126:53394 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T05:10:01.385786Z] INFO:tax_automator.app:Document status is 'completed', skipping
+[2026-02-25T05:10:01.332444Z] INFO:tax_automator.app:Processing receipt pCZ7QKz7w2c58kfM1vbJ
+[2026-02-25T05:10:01.332389Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T05:09:55.682271Z] INFO:     169.254.169.126:61980 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T05:09:55.579178Z] INFO:tax_automator.app:Agent: Okay, I will analyze the receipt with ID pCZ7QKz7w2c58kfM1vbJ. Could you please provide the image URL of the receipt?
+[2026-02-25T05:09:55.577663Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T05:09:54.872708Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T05:09:54.435623Z] INFO:tax_automator.app:Invoking agent for receipt pCZ7QKz7w2c58kfM1vbJ
+[2026-02-25T05:09:54.218524Z] INFO:tax_automator.app:Processing receipt pCZ7QKz7w2c58kfM1vbJ
+[2026-02-25T05:09:54.218471Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T05:09:54.159674Z] Default STARTUP TCP probe succeeded after 1 attempt for container "tax-automator-service-1" on port 8080.
+[2026-02-25T05:09:54.159310Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T05:09:54.158227Z] INFO:     Application startup complete.
+[2026-02-25T05:09:54.157906Z] INFO:     Waiting for application startup.
+[2026-02-25T05:09:54.157863Z] INFO:     Started server process [1]
+[2026-02-25T05:09:38.814087Z] Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+[2026-02-25T04:54:42.530703Z] INFO:     Finished server process [1]
+[2026-02-25T04:54:42.530599Z] INFO:     Application shutdown complete.
+[2026-02-25T04:54:42.530383Z] INFO:     Waiting for application shutdown.
+[2026-02-25T04:54:42.429570Z] INFO:     Shutting down
+[2026-02-25T04:39:39.625093Z] INFO:     169.254.169.126:54482 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T04:39:39.624571Z] INFO:tax_automator.app:Document status is 'completed', skipping
+[2026-02-25T04:39:39.558689Z] INFO:tax_automator.app:Processing receipt Kbfw5M0MOwlM4fXvzF89
+[2026-02-25T04:39:39.558597Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T04:39:33.902086Z] INFO:     169.254.169.126:54458 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T04:39:33.816192Z] INFO:tax_automator.app:Agent: OK. I have analyzed the receipt from Shell for $74.23 on 2023-07-15 and categorized it as "Auto Expenses". I've saved the receipt to Firestore with document ID: B64rqA1Iq8xWT111SP9s.
+[2026-02-25T04:39:33.814858Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T04:39:33.697100Z] INFO:     169.254.169.126:54464 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T04:39:33.696654Z] INFO:tax_automator.app:Document status is 'processed', skipping
+[2026-02-25T04:39:33.641739Z] INFO:tax_automator.app:Processing receipt B64rqA1Iq8xWT111SP9s
+[2026-02-25T04:39:33.641682Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T04:39:32.926305Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T04:39:32.716874Z] WARNING:google_genai.types:Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+[2026-02-25T04:39:32.716758Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T04:39:31.597872Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T04:39:31.181210Z] INFO:tax_automator.app:Invoking agent for receipt Kbfw5M0MOwlM4fXvzF89
+[2026-02-25T04:39:30.960132Z] INFO:tax_automator.app:Processing receipt Kbfw5M0MOwlM4fXvzF89
+[2026-02-25T04:39:30.960088Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T04:39:30.933330Z] Default STARTUP TCP probe succeeded after 1 attempt for container "tax-automator-service-1" on port 8080.
+[2026-02-25T04:39:30.932869Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T04:39:30.932018Z] INFO:     Application startup complete.
+[2026-02-25T04:39:30.931657Z] INFO:     Waiting for application startup.
+[2026-02-25T04:39:30.931591Z] INFO:     Started server process [1]
+[2026-02-25T04:39:17.037542Z] Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+[2026-02-25T04:11:32.622396Z] INFO:     Finished server process [1]
+[2026-02-25T04:11:32.622288Z] INFO:     Application shutdown complete.
+[2026-02-25T04:11:32.622025Z] INFO:     Waiting for application shutdown.
+[2026-02-25T04:11:32.521435Z] INFO:     Shutting down
+[2026-02-25T03:56:26.358510Z] INFO:     169.254.169.126:7216 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T03:56:26.358023Z] INFO:tax_automator.app:Document status is 'completed', skipping
+[2026-02-25T03:56:26.300549Z] INFO:tax_automator.app:Processing receipt qV508fp4G9efl4GguXDE
+[2026-02-25T03:56:26.300509Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T03:56:20.184412Z] INFO:     169.254.169.126:5664 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T03:56:20.081606Z] INFO:tax_automator.app:Agent: OK. I have analyzed the receipt and stored it in Firestore. The store is "test store", the date is 2024-01-01, the amount is $100.0, and the category is Meals. The image URL has also been saved. The d
+[2026-02-25T03:56:20.080065Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T03:56:19.933087Z] INFO:     169.254.169.126:5666 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T03:56:19.932476Z] INFO:tax_automator.app:Document status is 'processed', skipping
+[2026-02-25T03:56:19.875092Z] INFO:tax_automator.app:Processing receipt pv2JVtJZ9WAOU4xTQNeI
+[2026-02-25T03:56:19.875043Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T03:56:19.217708Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T03:56:19.043805Z] WARNING:google_genai.types:Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+[2026-02-25T03:56:19.043606Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T03:56:18.015508Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T03:56:17.527111Z] INFO:tax_automator.app:Invoking agent for receipt qV508fp4G9efl4GguXDE
+[2026-02-25T03:56:17.241097Z] INFO:tax_automator.app:Processing receipt qV508fp4G9efl4GguXDE
+[2026-02-25T03:56:17.241058Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T03:56:17.152188Z] Default STARTUP TCP probe succeeded after 1 attempt for container "tax-automator-service-1" on port 8080.
+[2026-02-25T03:56:17.151707Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T03:56:17.150465Z] INFO:     Application startup complete.
+[2026-02-25T03:56:17.149990Z] INFO:     Waiting for application startup.
+[2026-02-25T03:56:17.149764Z] INFO:     Started server process [1]
+[2026-02-25T03:56:03.785822Z] Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+[2026-02-25T02:40:32.598347Z] INFO:     Finished server process [1]
+[2026-02-25T02:40:32.598202Z] INFO:     Application shutdown complete.
+[2026-02-25T02:40:32.597891Z] INFO:     Waiting for application shutdown.
+[2026-02-25T02:40:32.496342Z] INFO:     Shutting down
+[2026-02-25T02:37:05.932609Z] INFO:     Finished server process [1]
+[2026-02-25T02:37:05.931952Z] INFO:     Application shutdown complete.
+[2026-02-25T02:37:05.931345Z] INFO:     Waiting for application shutdown.
+[2026-02-25T02:37:05.830295Z] INFO:     Shutting down
+[2026-02-25T02:25:26.390170Z] INFO:     169.254.169.126:16666 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T02:25:26.310581Z] *   **Image URL:** gs://blue-hills-tax-automator.fireb
+[2026-02-25T02:25:26.310579Z] *   **Category:** Unknown
+[2026-02-25T02:25:26.310577Z] *   **Amount:** 12.34
+[2026-02-25T02:25:26.310575Z] *   **Date:** 2023-07-20
+[2026-02-25T02:25:26.310572Z] *   **Store:** Unknown
+[2026-02-25T02:25:26.310566Z] INFO:tax_automator.app:Agent: OK. I have stored the receipt with these details:
+[2026-02-25T02:25:26.309602Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T02:25:25.140938Z] INFO:     169.254.169.126:15310 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T02:25:25.138641Z] INFO:tax_automator.app:Document status is 'processed', skipping
+[2026-02-25T02:25:25.076716Z] INFO:tax_automator.app:Processing receipt LekRrv9hvdvcZxm5UVlf
+[2026-02-25T02:25:25.076661Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T02:25:24.477991Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T02:25:24.339785Z] WARNING:google_genai.types:Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+[2026-02-25T02:25:24.339668Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T02:25:22.872003Z] INFO:     169.254.169.126:15304 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T02:25:22.871457Z] INFO:tax_automator.app:Document status is 'processing', skipping
+[2026-02-25T02:25:22.788537Z] INFO:tax_automator.app:Processing receipt ivBauTGC7A5oxINT59pr
+[2026-02-25T02:25:22.788509Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T02:25:22.654801Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T02:25:22.363622Z] INFO:tax_automator.app:Invoking agent for receipt ivBauTGC7A5oxINT59pr
+[2026-02-25T02:25:22.190758Z] INFO:tax_automator.app:Processing receipt ivBauTGC7A5oxINT59pr
+[2026-02-25T02:25:22.190629Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T02:25:22.175706Z] Default STARTUP TCP probe succeeded after 1 attempt for container "tax-automator-service-1" on port 8080.
+[2026-02-25T02:25:22.175205Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T02:25:22.174438Z] INFO:     Application startup complete.
+[2026-02-25T02:25:22.174169Z] INFO:     Waiting for application startup.
+[2026-02-25T02:25:22.174105Z] INFO:     Started server process [1]
+[2026-02-25T02:25:20.862495Z] INFO:     169.254.169.126:15288 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T02:25:20.862022Z] INFO:tax_automator.app:Document status is 'completed', skipping
+[2026-02-25T02:25:20.779502Z] INFO:tax_automator.app:Processing receipt 6BBhfEPZKocUjWNZx8hG
+[2026-02-25T02:25:20.779473Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T02:25:14.649655Z] INFO:     169.254.169.126:41796 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T02:25:14.511548Z] INFO:tax_automator.app:Agent: OK. I have analyzed the receipt from Shell for $62.50 on 2023-07-15 and categorized it as "Auto Expenses". I have stored it in Firestore with document ID: fBlw1UcdpeQaEadJdOHx.
+[2026-02-25T02:25:14.510244Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T02:25:14.408854Z] INFO:     169.254.169.126:41802 - "POST /process_receipt HTTP/1.1" 200 OK
+[2026-02-25T02:25:14.408364Z] INFO:tax_automator.app:Document status is 'processed', skipping
+[2026-02-25T02:25:14.352791Z] INFO:tax_automator.app:Processing receipt fBlw1UcdpeQaEadJdOHx
+[2026-02-25T02:25:14.352767Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T02:25:13.740231Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T02:25:13.599830Z] WARNING:google_genai.types:Warning: there are non-text parts in the response: ['function_call'], returning concatenated text result from text parts. Check the full candidates.content.parts accessor to get the full model response.
+[2026-02-25T02:25:13.599531Z] INFO:google_adk.google.adk.models.google_llm:Response received from the model.
+[2026-02-25T02:25:12.426851Z] INFO:google_adk.google.adk.models.google_llm:Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.VERTEX_AI, stream: False
+[2026-02-25T02:25:11.991506Z] INFO:tax_automator.app:Invoking agent for receipt 6BBhfEPZKocUjWNZx8hG
+[2026-02-25T02:25:11.703352Z] INFO:tax_automator.app:Processing receipt 6BBhfEPZKocUjWNZx8hG
+[2026-02-25T02:25:11.703300Z] INFO:tax_automator.app:Received /process_receipt request
+[2026-02-25T02:25:11.691532Z] Default STARTUP TCP probe succeeded after 1 attempt for container "tax-automator-service-1" on port 8080.
+[2026-02-25T02:25:11.690684Z] INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+[2026-02-25T02:25:11.689622Z] INFO:     Application startup complete.
+[2026-02-25T02:25:11.688683Z] INFO:     Waiting for application startup.
+[2026-02-25T02:25:11.688611Z] INFO:     Started server process [1]
+[2026-02-25T02:25:11.557820Z] Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+[2026-02-25T02:24:56.260545Z] Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.

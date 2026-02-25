@@ -54,8 +54,9 @@ export default function TelegramLinker() {
             });
 
             setLinkingCode(code);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to generate link code:", error);
+            alert("Failed to generate code: " + error.message);
         } finally {
             setIsGenerating(false);
         }

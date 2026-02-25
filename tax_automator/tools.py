@@ -10,10 +10,11 @@ db = firestore.client()
 
 
 def store_receipt_to_firestore(
-    store: str,
+    receipt_id: str,
     date: str,
     amount: float,
     category: str,
+    store: Optional[str] = "Unknown Vendor",
     image_url: Optional[str] = None,
     user_id: Optional[str] = None
 ) -> str:
@@ -21,31 +22,26 @@ def store_receipt_to_firestore(
     Saves receipt metadata and optional image URL to Firestore.
 
     Args:
-        store: The name of the store or vendor.
+        receipt_id: The exact ID of the original receipt document being processed.
         date: The date of the transaction (YYYY-MM-DD).
         amount: The total amount of the transaction.
         category: The potential tax category.
+        store: The name of the store or vendor (optional).
         image_url: The URL of the receipt image in Google Cloud Storage (optional).
         user_id: The ID of the user who owns this receipt (optional).
 
     Returns:
-        The ID of the created document in Firestore.
+        The ID of the updated document in Firestore.
     """
-    # Create deterministic ID to prevent duplicates
-    unique_string = f"{store.strip().lower()}_{date.strip()}_{amount}"
-    doc_id = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
-    
-    doc_ref = db.collection('receipts').document(doc_id)
-    doc_ref.set({
+    doc_ref = db.collection('receipts').document(receipt_id)
+    doc_ref.update({
         'store': store,
         'date': date,
         'amount': amount,
         'category': category,
-        'image_url': image_url,
-        'user_id': user_id,
         'status': 'processed' if amount < 500 else 'needs_approval'
     })
-    return f"Receipt stored successfully with ID: {doc_ref.id}"
+    return f"Receipt updated successfully with ID: {doc_ref.id}"
 
 
 def tax_categorizer(item_description: str, amount: float) -> str:

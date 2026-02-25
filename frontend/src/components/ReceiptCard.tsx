@@ -45,7 +45,12 @@ export default function ReceiptCard({
                             fontWeight: 600,
                             color: "#f1f5f9",
                             marginBottom: 2,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "180px",
                         }}
+                        title={receipt.store || receipt.original_filename || "Receipt"}
                     >
                         {receipt.store || receipt.original_filename || "Receipt"}
                     </div>

@@ -60,21 +60,31 @@ async def process_receipt(request: Request):
     doc_ref.update({"status": "processing"})
 
     # Build the agent prompt
-    image_uri = data.get("gcs_uri") or data.get("imageUrl")
+    from google.genai import types
+
+    image_uri = data.get("gcs_uri") or data.get("image_url")
     user_id = data.get("user_id")
     prompt = f"Analyze the receipt with ID: {receipt_id}."
-    if image_uri:
+    
+    parts = [types.Part.from_text(text=prompt)]
+    
+    if image_uri and image_uri.startswith("gs://"):
+        parts.append(types.Part.from_uri(file_uri=image_uri, mime_type="image/jpeg"))
+    elif image_uri:
         prompt += f"\nThe receipt image is available at: {image_uri}"
+        parts = [types.Part.from_text(text=prompt)]
+        
     if user_id:
         prompt += f"\nThe user_id is: {user_id}. You MUST pass this user_id to the store_receipt_to_firestore tool."
+        parts[0] = types.Part.from_text(text=prompt)
 
     logger.info(f"Invoking agent for receipt {receipt_id}")
 
     try:
         from google.adk.runners import Runner
         from google.adk.sessions.in_memory_session_service import InMemorySessionService
-        from google.genai import types
-        from tax_automator.agent import root_agent
+        from google.genai import types as genai_types
+        from agent import root_agent
 
         session_service = InMemorySessionService()
         runner = Runner(
@@ -91,8 +101,8 @@ async def process_receipt(request: Request):
         async for event in runner.run_async(
             user_id="system",
             session_id=session.id,
-            new_message=types.Content(
-                role="user", parts=[types.Part(text=prompt)]
+            new_message=genai_types.Content(
+                role="user", parts=parts
             ),
         ):
             if event.content and event.content.parts:
