@@ -34,12 +34,41 @@ def store_receipt_to_firestore(
         The ID of the updated document in Firestore.
     """
     doc_ref = db.collection('receipts').document(receipt_id)
+    
+    # Check for duplicate receipts
+    if user_id:
+        existing_docs = db.collection('receipts') \
+            .where('user_id', '==', user_id) \
+            .where('date', '==', date) \
+            .stream()
+        
+        for doc in existing_docs:
+            if doc.id == receipt_id:
+                continue
+            doc_data = doc.to_dict()
+            # Avoid ValueError on casting amount if it's missing/bad
+            try:
+                existing_amount = float(doc_data.get('amount', 0))
+                current_amount = float(amount)
+            except (ValueError, TypeError):
+                continue
+                
+            if existing_amount == current_amount and doc_data.get('store', '').lower() == store.lower():
+                doc_ref.update({
+                    'status': 'duplicate',
+                    'store': store,
+                    'date': date,
+                    'amount': amount,
+                    'category': category
+                })
+                return f"Duplicate receipt detected. Handled as 'duplicate'. Original ID: {doc.id}"
+
     doc_ref.update({
         'store': store,
         'date': date,
         'amount': amount,
         'category': category,
-        'status': 'processed' if amount < 500 else 'needs_approval'
+        'status': 'processed' if float(amount) < 500 else 'needs_approval'
     })
     return f"Receipt updated successfully with ID: {doc_ref.id}"
 

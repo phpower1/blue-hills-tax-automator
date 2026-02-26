@@ -189,6 +189,9 @@ def store_receipt(data: dict, telegram_user: str, firebase_uid: str) -> str:
     doc_id = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
     
     doc_ref = db.collection('receipts').document(doc_id)
+    if doc_ref.get().exists:
+        raise ValueError("duplicate_receipt")
+        
     doc_ref.set({
         'store': store,
         'date': date,
@@ -265,6 +268,14 @@ async def handle_photo(update: Update, bot: Bot):
         )
         await bot.send_message(chat_id, reply, parse_mode=ParseMode.MARKDOWN_V2)
 
+    except ValueError as e:
+        if str(e) == "duplicate_receipt":
+            await bot.send_message(
+                chat_id,
+                "⚠️ This receipt appears to be a duplicate and has already been processed!"
+            )
+            return
+        raise
     except json.JSONDecodeError:
         await bot.send_message(
             chat_id,

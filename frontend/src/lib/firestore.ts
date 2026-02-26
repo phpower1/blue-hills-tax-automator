@@ -7,6 +7,8 @@ import {
     Timestamp,
     getDocs,
     limit,
+    deleteDoc,
+    doc,
     type DocumentData,
     type QuerySnapshot,
 } from "firebase/firestore";
@@ -55,6 +57,23 @@ export function subscribeToReceipts(
         let receipts = snapshot.docs.map((doc) =>
             docToReceipt(doc.id, doc.data())
         );
+
+        // Handle duplicates: alert user and delete the document so it is not saved
+        const duplicates = receipts.filter(r => r.status === "duplicate");
+        if (duplicates.length > 0) {
+            // Use setTimeout to ensure the alert doesn't block the render cycle
+            setTimeout(() => {
+                alert("⚠️ This receipt appears to be a duplicate and has already been processed!");
+            }, 100);
+
+            duplicates.forEach(d => {
+                deleteDoc(doc(db, "receipts", d.id)).catch(console.error);
+            });
+        }
+
+        // Filter out duplicates from the returned list
+        receipts = receipts.filter(r => r.status !== "duplicate");
+
         // Sort by created_at descending in memory
         receipts.sort((a, b) => {
             const timeA = a.created_at?.toMillis() || 0;

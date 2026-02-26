@@ -25,6 +25,11 @@ const statusStyles: Record<string, { bg: string; text: string; dot: string }> = 
         text: "#f87171",
         dot: "#ef4444",
     },
+    duplicate: {
+        bg: "rgba(100, 116, 139, 0.12)",
+        text: "#94a3b8",
+        dot: "#64748b",
+    },
 };
 
 export default function StatusBadge({ status }: { status: Status }) {
