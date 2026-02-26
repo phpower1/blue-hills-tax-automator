@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ChatBubble from "@/components/ChatBubble";
 import { GeminiLiveClient, type LiveMessage } from "@/lib/gemini-live";
 import { MicCapture, AudioPlayer, CameraCapture } from "@/lib/media-utils";
+import { useAuth } from "@/components/AuthProvider";
+import { getSpendingSummary, getRecentReceipts } from "@/lib/firestore";
 
 interface Message {
     id: string;
@@ -32,6 +34,7 @@ Be conversational, concise, and proactive. If you see a receipt via camera, imme
 Greet the user warmly and ask how you can help with their taxes today.`;
 
 export default function ChatPage() {
+    const { user } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState("");
     const [status, setStatus] = useState<
@@ -88,7 +91,7 @@ export default function ChatPage() {
     );
 
     const handleMessage = useCallback(
-        (msg: LiveMessage) => {
+        async (msg: LiveMessage) => {
             switch (msg.type) {
                 case "SETUP_COMPLETE":
                     setStatus("connected");
@@ -140,9 +143,41 @@ export default function ChatPage() {
                         updateLastAssistant(assistantBufferRef.current, true);
                     }
                     break;
+
+                case "TOOL_CALL": {
+                    const rawData = msg.data as Record<string, unknown>;
+                    const functionCalls = rawData.functionCalls as Array<{
+                        id: string;
+                        name: string;
+                        args: Record<string, unknown>;
+                    }>;
+
+                    if (functionCalls && user) {
+                        const responses = await Promise.all(
+                            functionCalls.map(async (call) => {
+                                try {
+                                    if (call.name === "get_spending_summary") {
+                                        const { start_date, end_date } = call.args as { start_date?: string; end_date?: string };
+                                        const data = await getSpendingSummary(user.uid, start_date, end_date);
+                                        return { id: call.id, name: call.name, response: data };
+                                    } else if (call.name === "get_recent_receipts") {
+                                        const { limit } = call.args as { limit?: number };
+                                        const data = await getRecentReceipts(user.uid, limit);
+                                        return { id: call.id, name: call.name, response: { receipts: data } };
+                                    }
+                                    return { id: call.id, name: call.name, response: { error: "Unknown function" } };
+                                } catch (e) {
+                                    return { id: call.id, name: call.name, response: { error: String(e) } };
+                                }
+                            })
+                        );
+                        clientRef.current?.sendToolResponse(responses);
+                    }
+                    break;
+                }
             }
         },
-        [addMessage, updateLastAssistant]
+        [addMessage, updateLastAssistant, user]
     );
 
     const connect = useCallback(() => {

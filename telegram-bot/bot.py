@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 from telegram import Update, Bot
 from telegram.constants import ParseMode
 import vertexai
-from vertexai.generative_models import GenerativeModel, Part, Image
+from vertexai.generative_models import GenerativeModel, Part, Image, Tool, FunctionDeclaration
 
 # ─── Config ───
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +27,41 @@ db = firestore.client()
 
 # ─── Init Vertex AI / Gemini ───
 vertexai.init(project=PROJECT_ID, location=REGION)
-model = GenerativeModel("gemini-2.5-flash")
+
+get_spending_summary_tool = FunctionDeclaration(
+    name="get_spending_summary",
+    description="Gets the total amount spent and a breakdown of spending by category within a specified date range. Dates should be in YYYY-MM-DD format. If no dates are provided, it summarizes all available data.",
+    parameters={
+        "type": "object",
+        "properties": {
+            "start_date": {
+                "type": "string",
+                "description": "Start date in YYYY-MM-DD format (inclusive)."
+            },
+            "end_date": {
+                "type": "string",
+                "description": "End date in YYYY-MM-DD format (inclusive)."
+            }
+        }
+    }
+)
+
+get_recent_receipts_tool = FunctionDeclaration(
+    name="get_recent_receipts",
+    description="Gets a list of the most recent receipts, including store, date, amount, and category.",
+    parameters={
+        "type": "object",
+        "properties": {
+            "limit": {
+                "type": "integer",
+                "description": "Maximum number of receipts to return (default 5, max 20)."
+            }
+        }
+    }
+)
+
+tools = Tool(function_declarations=[get_spending_summary_tool, get_recent_receipts_tool])
+model = GenerativeModel("gemini-2.5-flash", tools=[tools])
 
 # ─── Flask App ───
 app = Flask(__name__)
@@ -63,9 +97,68 @@ Respond in this exact JSON format, nothing else:
 TEXT_PROMPT = """You are a friendly tax specialist assistant called Blue Hills Tax Bot.
 The user sent a text message instead of a receipt photo.
 Help them with tax-related questions, or remind them they can send receipt photos for automatic processing.
+You have access to their receipt data. If they ask about their spending, use your tools to look it up!
 Keep responses concise (2-3 sentences max).
 
 User message: {message}"""
+
+def get_spending_summary_db(firebase_uid: str, start_date: str = None, end_date: str = None) -> dict:
+    """Queries Firestore for spending summary."""
+    try:
+        query = db.collection('receipts').where('user_id', '==', firebase_uid)
+        if start_date:
+            query = query.where('date', '>=', start_date)
+        if end_date:
+            query = query.where('date', '<=', end_date)
+            
+        docs = query.stream()
+        
+        total = 0
+        by_category = {}
+        count = 0
+        
+        for doc in docs:
+            data = doc.to_dict()
+            amount = float(data.get('amount', 0))
+            category = data.get('category', 'Uncategorized')
+            
+            total += amount
+            by_category[category] = by_category.get(category, 0) + amount
+            count += 1
+            
+        return {
+            "total_spent": total,
+            "by_category": by_category,
+            "receipt_count": count
+        }
+    except Exception as e:
+        logger.error(f"Error in get_spending_summary_db: {e}")
+        return {"error": str(e)}
+
+def get_recent_receipts_db(firebase_uid: str, limit: int = 5) -> dict:
+    """Queries Firestore for recent receipts."""
+    try:
+        limit = min(max(1, limit), 20)  # Clamp between 1 and 20
+        docs = db.collection('receipts') \
+            .where('user_id', '==', firebase_uid) \
+            .order_by('created_at', direction=firestore.Query.DESCENDING) \
+            .limit(limit) \
+            .stream()
+            
+        receipts = []
+        for doc in docs:
+            data = doc.to_dict()
+            receipts.append({
+                "store": data.get('store', 'Unknown'),
+                "date": data.get('date', 'N/A'),
+                "amount": float(data.get('amount', 0)),
+                "category": data.get('category', 'Uncategorized')
+            })
+            
+        return {"receipts": receipts}
+    except Exception as e:
+        logger.error(f"Error in get_recent_receipts_db: {e}")
+        return {"error": str(e)}
 
 
 def categorize(description: str) -> str:
@@ -242,7 +335,39 @@ async def handle_text(update: Update, bot: Bot):
 
     # Use Gemini for text responses
     try:
-        response = model.generate_content(TEXT_PROMPT.format(message=text))
+        chat = model.start_chat()
+        response = chat.send_message(TEXT_PROMPT.format(message=text))
+
+        # Handle tool calls if any
+        if response.function_calls:
+            for function_call in response.function_calls:
+                func_name = function_call.name
+                args = function_call.args
+                firebase_uid = link_doc.to_dict()["firebase_uid"]
+
+                api_response = {}
+                if func_name == "get_spending_summary":
+                    api_response = get_spending_summary_db(
+                        firebase_uid, 
+                        args.get("start_date"), 
+                        args.get("end_date")
+                    )
+                elif func_name == "get_recent_receipts":
+                    api_response = get_recent_receipts_db(
+                        firebase_uid, 
+                        args.get("limit", 5)
+                    )
+                else:
+                    api_response = {"error": f"Unknown function: {func_name}"}
+
+                # Send function response back to Gemini to get the final answer
+                response = chat.send_message(
+                    Part.from_function_response(
+                        name=func_name,
+                        response={"content": api_response}
+                    )
+                )
+
         await bot.send_message(chat_id, response.text)
     except Exception as e:
         logger.error(f"Error handling text: {e}")

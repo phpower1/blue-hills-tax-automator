@@ -123,6 +123,42 @@ export class GeminiLiveClient {
                             prefix_padding_ms: 500,
                         },
                     },
+                    tools: [
+                        {
+                            function_declarations: [
+                                {
+                                    name: "get_spending_summary",
+                                    description: "Gets the total amount spent and a breakdown of spending by category within a specified date range. Dates should be in YYYY-MM-DD format. If no dates are provided, it summarizes all available data.",
+                                    parameters: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            start_date: {
+                                                type: "STRING",
+                                                description: "Start date in YYYY-MM-DD format (inclusive).",
+                                            },
+                                            end_date: {
+                                                type: "STRING",
+                                                description: "End date in YYYY-MM-DD format (inclusive).",
+                                            },
+                                        },
+                                    },
+                                },
+                                {
+                                    name: "get_recent_receipts",
+                                    description: "Gets a list of the most recent receipts, including store, date, amount, and category.",
+                                    parameters: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            limit: {
+                                                type: "INTEGER",
+                                                description: "Maximum number of receipts to return (default 5, max 20).",
+                                            },
+                                        },
+                                    },
+                                }
+                            ],
+                        }
+                    ],
                 },
             });
 
@@ -182,6 +218,18 @@ export class GeminiLiveClient {
         this.send({
             realtime_input: {
                 media_chunks: [{ mime_type: "image/jpeg", data: base64JPEG }],
+            },
+        });
+    }
+
+    sendToolResponse(functionResponses: Array<{ id: string; name: string; response: Record<string, unknown> }>) {
+        this.send({
+            tool_response: {
+                function_responses: functionResponses.map((tr) => ({
+                    id: tr.id,
+                    name: tr.name,
+                    response: tr.response,
+                })),
             },
         });
     }

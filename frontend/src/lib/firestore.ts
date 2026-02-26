@@ -5,6 +5,8 @@ import {
     onSnapshot,
     where,
     Timestamp,
+    getDocs,
+    limit,
     type DocumentData,
     type QuerySnapshot,
 } from "firebase/firestore";
@@ -79,5 +81,54 @@ export function subscribeToReceiptsByStatus(
             docToReceipt(doc.id, doc.data())
         );
         callback(receipts);
+    });
+}
+
+export async function getSpendingSummary(userId: string, startDate?: string, endDate?: string) {
+    let q = query(
+        collection(db, "receipts"),
+        where("user_id", "==", userId)
+    );
+    if (startDate) {
+        q = query(q, where("date", ">=", startDate));
+    }
+    if (endDate) {
+        q = query(q, where("date", "<=", endDate));
+    }
+    const snapshot = await getDocs(q);
+    const receipts = snapshot.docs.map(doc => docToReceipt(doc.id, doc.data()));
+
+    let total = 0;
+    const byCategory: Record<string, number> = {};
+    for (const r of receipts) {
+        if (r.amount) {
+            total += r.amount;
+            const cat = r.category || "Uncategorized";
+            byCategory[cat] = (byCategory[cat] || 0) + r.amount;
+        }
+    }
+    return {
+        total_spent: total,
+        by_category: byCategory,
+        receipt_count: receipts.length
+    };
+}
+
+export async function getRecentReceipts(userId: string, limitCount: number = 5) {
+    const q = query(
+        collection(db, "receipts"),
+        where("user_id", "==", userId),
+        orderBy("created_at", "desc"),
+        limit(limitCount)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+        const r = docToReceipt(doc.id, doc.data());
+        return {
+            store: r.store,
+            date: r.date,
+            amount: r.amount,
+            category: r.category
+        };
     });
 }
