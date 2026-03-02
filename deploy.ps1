@@ -25,7 +25,7 @@ gcloud run deploy telegram-bot `
     --platform managed `
     --region $REGION `
     --allow-unauthenticated `
-    --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID,TELEGRAM_TOKEN=$env:TELEGRAM_TOKEN"
+    --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID,TELEGRAM_TOKEN=8536944890:AAHUSqgP3rlYwrSzsTdQpmGVPv7Cdy1h2Ik"
 cd ..
 
 Write-Host "✅ All services deployed successfully!" -ForegroundColor Green
