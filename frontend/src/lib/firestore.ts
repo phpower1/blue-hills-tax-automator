@@ -12,7 +12,8 @@ import {
     type DocumentData,
     type QuerySnapshot,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { ref, deleteObject } from "firebase/storage";
+import { db, storage } from "./firebase";
 
 export interface Receipt {
     id: string;
@@ -23,6 +24,7 @@ export interface Receipt {
     status: string;
     image_url?: string;
     gcs_uri?: string;
+    description?: string;
     original_filename?: string;
     error?: string;
     created_at?: Timestamp;
@@ -38,6 +40,7 @@ function docToReceipt(id: string, data: DocumentData): Receipt {
         status: data.status ?? "unknown",
         image_url: data.image_url ?? "",
         gcs_uri: data.gcs_uri ?? "",
+        description: data.description ?? "",
         original_filename: data.original_filename ?? "",
         error: data.error ?? "",
         created_at: data.created_at,
@@ -138,4 +141,24 @@ export async function getRecentReceipts(userId: string, limitCount: number = 5) 
             category: r.category
         };
     });
+}
+
+export async function deleteReceipt(receipt: Receipt): Promise<void> {
+    // Delete image from Storage if it exists
+    if (receipt.gcs_uri) {
+        try {
+            // gcs_uri format: gs://bucket-name/path/to/file
+            const path = receipt.gcs_uri.replace(/^gs:\/\/[^/]+\//, "");
+            const storageRef = ref(storage, path);
+            await deleteObject(storageRef);
+        } catch (err: any) {
+            // Ignore "object not found" errors — image may already be deleted
+            if (err?.code !== "storage/object-not-found") {
+                console.error("Error deleting image from storage:", err);
+            }
+        }
+    }
+
+    // Delete Firestore document
+    await deleteDoc(doc(db, "receipts", receipt.id));
 }

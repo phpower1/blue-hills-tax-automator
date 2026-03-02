@@ -16,6 +16,7 @@ def store_receipt_to_firestore(
     amount: float,
     category: str,
     store: Optional[str] = "Unknown Vendor",
+    description: Optional[str] = "",
     image_url: Optional[str] = None,
     user_id: Optional[str] = None
 ) -> str:
@@ -28,6 +29,7 @@ def store_receipt_to_firestore(
         amount: The total amount of the transaction.
         category: The potential tax category.
         store: The name of the store or vendor (optional).
+        description: A brief description of the purchased items (optional).
         image_url: The URL of the receipt image in Google Cloud Storage (optional).
         user_id: The ID of the user who owns this receipt (optional).
 
@@ -88,6 +90,7 @@ def store_receipt_to_firestore(
         'date': date,
         'amount': amount,
         'category': category,
+        'description': description,
         'status': 'processed' if float(amount) < 500 else 'needs_approval'
     })
     return f"Receipt updated successfully with ID: {doc_ref.id}"

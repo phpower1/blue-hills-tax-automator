@@ -5,7 +5,7 @@ from datetime import datetime
 import hashlib
 
 import firebase_admin
-from firebase_admin import firestore
+from firebase_admin import firestore, storage as fb_storage
 from flask import Flask, request, jsonify
 from telegram import Update, Bot
 from telegram.constants import ParseMode
@@ -24,6 +24,7 @@ REGION = os.environ.get("GOOGLE_CLOUD_REGION", "us-central1")
 if not firebase_admin._apps:
     firebase_admin.initialize_app()
 db = firestore.client()
+bucket = fb_storage.bucket(f"{PROJECT_ID}.firebasestorage.app")
 
 # ─── Init Vertex AI / Gemini ───
 vertexai.init(project=PROJECT_ID, location=REGION)
@@ -179,7 +180,20 @@ def categorize(description: str) -> str:
     return "Uncategorized"
 
 
-def store_receipt(data: dict, telegram_user: str, firebase_uid: str) -> str:
+def upload_to_storage(photo_bytes: bytes, filename: str) -> tuple:
+    """Upload photo to Firebase Storage. Returns (image_url, gcs_uri)."""
+    timestamp = int(datetime.now().timestamp() * 1000)
+    safe_name = filename.replace(' ', '_')
+    storage_path = f"receipts/{timestamp}_{safe_name}"
+    blob = bucket.blob(storage_path)
+    blob.upload_from_string(photo_bytes, content_type='image/jpeg')
+    blob.make_public()
+    image_url = blob.public_url
+    gcs_uri = f"gs://{bucket.name}/{storage_path}"
+    return image_url, gcs_uri
+
+
+def store_receipt(data: dict, telegram_user: str, firebase_uid: str, image_url: str = None, gcs_uri: str = None) -> str:
     """Store receipt to Firestore using deterministic ID to prevent duplicates."""
     store = data.get('store', 'Unknown')
     date = data.get('date', datetime.now().strftime('%Y-%m-%d'))
@@ -191,8 +205,8 @@ def store_receipt(data: dict, telegram_user: str, firebase_uid: str) -> str:
     doc_ref = db.collection('receipts').document(doc_id)
     if doc_ref.get().exists:
         raise ValueError("duplicate_receipt")
-        
-    doc_ref.set({
+    
+    doc_data = {
         'store': store,
         'date': date,
         'amount': amount,
@@ -203,7 +217,13 @@ def store_receipt(data: dict, telegram_user: str, firebase_uid: str) -> str:
         'user_id': firebase_uid,
         'status': 'processed' if amount < 500 else 'needs_approval',
         'created_at': firestore.SERVER_TIMESTAMP,
-    })
+    }
+    if image_url:
+        doc_data['image_url'] = image_url
+    if gcs_uri:
+        doc_data['gcs_uri'] = gcs_uri
+        
+    doc_ref.set(doc_data)
     return doc_ref.id
 
 
@@ -249,24 +269,27 @@ async def handle_photo(update: Update, bot: Bot):
         if data.get('category') == 'Uncategorized' and data.get('description'):
             data['category'] = categorize(data['description'])
 
+        # Upload image to Firebase Storage
+        image_url, gcs_uri = upload_to_storage(bytes(photo_bytes), f"telegram_{chat_id}.jpg")
+
         # Store to Firestore
-        doc_id = store_receipt(data, username, firebase_uid)
+        doc_id = store_receipt(data, username, firebase_uid, image_url=image_url, gcs_uri=gcs_uri)
 
         # Format response
         amount = float(data.get('amount', 0))
         status = "⚠️ Needs Approval (>$500)" if amount >= 500 else "✅ Processed"
 
         reply = (
-            f"*🧾 Receipt Processed\\!*\n\n"
-            f"🏪 *Store:* {_escape(data.get('store', 'Unknown'))}\n"
-            f"📅 *Date:* {_escape(data.get('date', 'N/A'))}\n"
-            f"💰 *Amount:* \\${amount:.2f}\n"
-            f"🏷️ *Category:* {_escape(data.get('category', 'Uncategorized'))}\n"
-            f"📝 *Items:* {_escape(data.get('description', 'N/A'))}\n\n"
-            f"*Status:* {_escape(status)}\n"
-            f"🗂️ _Saved to dashboard \\(ID: {doc_id[:8]}\\.\\.\\.\\)_"
+            f"🧾 Receipt Processed!\n\n"
+            f"🏪 Store: {data.get('store', 'Unknown')}\n"
+            f"📅 Date: {data.get('date', 'N/A')}\n"
+            f"💰 Amount: ${amount:.2f}\n"
+            f"🏷️ Category: {data.get('category', 'Uncategorized')}\n"
+            f"📝 Items: {data.get('description', 'N/A')}\n\n"
+            f"Status: {status}\n"
+            f"🗂️ Saved to dashboard (ID: {doc_id[:8]}...)"
         )
-        await bot.send_message(chat_id, reply, parse_mode=ParseMode.MARKDOWN_V2)
+        await bot.send_message(chat_id, reply)
 
     except ValueError as e:
         if str(e) == "duplicate_receipt":
@@ -350,10 +373,12 @@ async def handle_text(update: Update, bot: Bot):
         response = chat.send_message(TEXT_PROMPT.format(message=text))
 
         # Handle tool calls if any
-        if response.function_calls:
-            for function_call in response.function_calls:
+        fc_list = getattr(response.candidates[0].content.parts[0], 'function_call', None) if response.candidates else None
+        if fc_list and fc_list.name:
+            function_calls = [part.function_call for part in response.candidates[0].content.parts if hasattr(part, 'function_call') and part.function_call.name]
+            for function_call in function_calls:
                 func_name = function_call.name
-                args = function_call.args
+                args = dict(function_call.args) if function_call.args else {}
                 firebase_uid = link_doc.to_dict()["firebase_uid"]
 
                 api_response = {}

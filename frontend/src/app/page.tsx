@@ -28,7 +28,7 @@ export default function DashboardPage() {
   const filtered =
     filter === "all" ? receipts : receipts.filter((r) => r.status === filter);
 
-  const filters = ["all", "new", "processing", "completed", "failed"];
+  const filters = ["all", "new", "processing", "processed", "needs_approval", "completed", "failed"];
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
