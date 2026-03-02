@@ -30,14 +30,13 @@ export default function UploadZone() {
                 setUploads((prev) =>
                     prev.map((u) => (u.id === id ? { ...u, progress } : u))
                 );
-            }).catch(() => {
-                setUploads((prev) =>
-                    prev.map((u) =>
-                        u.id === id
-                            ? { ...u, progress: { progress: 0, state: "error" as const } }
-                            : u
-                    )
-                );
+            }).catch((err) => {
+                if (err.message === "duplicate_filename") {
+                    alert(`⚠️ A receipt with the name "${file.name}" has already been uploaded and is being processed.`);
+                } else {
+                    alert(`❌ Upload failed for "${file.name}": ${err.message || "Unknown error"}`);
+                }
+                setUploads((prev) => prev.filter((u) => u.id !== id));
             });
         });
 

@@ -1,9 +1,24 @@
 [
   {
-    "created_at": "2026-02-25 05:09:39.967725+00:00",
+    "created_at": "2026-02-27 15:19:02.221000+00:00",
+    "gcs_uri": "gs://blue-hills-tax-automator.firebasestorage.app/receipts/1772205539491_1772205525188712950459457626724.jpg",
     "user_id": "IFMEMMkAzfNuUDdq7hhIko6t9Zp2",
-    "status": "completed",
-    "original_filename": "test.jpg",
-    "id": "pCZ7QKz7w2c58kfM1vbJ"
+    "status": "new",
+    "original_filename": "1772205525188712950459457626724.jpg",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/blue-hills-tax-automator.firebasestorage.app/o/receipts%2F1772205539491_1772205525188712950459457626724.jpg?alt=media&token=67a9b12c-3548-4042-88ae-47bc4bb5099f",
+    "id": "03v9r8HLeDGgDG9SPcWE"
+  },
+  {
+    "created_at": "2026-02-25 06:31:45.158000+00:00",
+    "date": "2025-11-25",
+    "original_filename": "1771991757509_1000053573.jpg",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/blue-hills-tax-automator.firebasestorage.app/o/receipts%2F1772001104464_1771991757509_1000053573.jpg?alt=media&token=03c2c666-fb6a-4708-a6ca-328bd5080e26",
+    "category": "Auto Expenses",
+    "gcs_uri": "gs://blue-hills-tax-automator.firebasestorage.app/receipts/1772001104464_1771991757509_1000053573.jpg",
+    "user_id": "IFMEMMkAzfNuUDdq7hhIko6t9Zp2",
+    "status": "processed",
+    "store": "Unknown Vendor",
+    "amount": 23,
+    "id": "dBR7Fn902NihC3SjyTTW"
   }
 ]

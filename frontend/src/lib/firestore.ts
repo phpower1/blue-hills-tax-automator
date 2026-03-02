@@ -58,21 +58,8 @@ export function subscribeToReceipts(
             docToReceipt(doc.id, doc.data())
         );
 
-        // Handle duplicates: alert user and delete the document so it is not saved
-        const duplicates = receipts.filter(r => r.status === "duplicate");
-        if (duplicates.length > 0) {
-            // Use setTimeout to ensure the alert doesn't block the render cycle
-            setTimeout(() => {
-                alert("⚠️ This receipt appears to be a duplicate and has already been processed!");
-            }, 100);
-
-            duplicates.forEach(d => {
-                deleteDoc(doc(db, "receipts", d.id)).catch(console.error);
-            });
-        }
-
-        // Filter out duplicates from the returned list
-        receipts = receipts.filter(r => r.status !== "duplicate");
+        // Filter out any duplicates from the list provided to the UI
+        receipts = receipts.filter(r => r.status !== 'duplicate');
 
         // Sort by created_at descending in memory
         receipts.sort((a, b) => {
@@ -120,6 +107,7 @@ export async function getSpendingSummary(userId: string, startDate?: string, end
     let total = 0;
     const byCategory: Record<string, number> = {};
     for (const r of receipts) {
+        if (r.status === 'duplicate') continue;
         if (r.amount) {
             total += r.amount;
             const cat = r.category || "Uncategorized";

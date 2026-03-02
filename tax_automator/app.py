@@ -7,7 +7,18 @@ from fastapi import FastAPI, Request, HTTPException
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import firebase_admin
+firebase_admin.initialize_app()
+
 app = FastAPI(title="Tax Automator Agent")
+
+@app.on_event("startup")
+async def startup_event():
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if api_key:
+        logger.info("GOOGLE_API_KEY is set")
+    else:
+        logger.warning("GOOGLE_API_KEY is NOT set")
 
 
 @app.get("/")
@@ -60,30 +71,45 @@ async def process_receipt(request: Request):
     doc_ref.update({"status": "processing"})
 
     # Build the agent prompt
-    from google.genai import types
+    from google.genai.types import Part, Content
 
     image_uri = data.get("gcs_uri") or data.get("image_url")
     user_id = data.get("user_id")
     prompt = f"Analyze the receipt with ID: {receipt_id}."
     
-    parts = [types.Part.from_text(text=prompt)]
+    parts = [Part.from_text(text=prompt)]
     
     if image_uri and image_uri.startswith("gs://"):
-        parts.append(types.Part.from_uri(file_uri=image_uri, mime_type="image/jpeg"))
+        from firebase_admin import storage
+        try:
+            # Parse bucket and path: gs://bucket-name/path/to/blob
+            parts_uri = image_uri.replace("gs://", "").split("/", 1)
+            bucket_name = parts_uri[0]
+            blob_path = parts_uri[1]
+            
+            bucket = storage.bucket(bucket_name)
+            blob = bucket.blob(blob_path)
+            image_bytes = blob.download_as_bytes()
+            parts.append(Part.from_bytes(data=image_bytes, mime_type="image/jpeg"))
+            logger.info(f"Successfully downloaded image from {image_uri}")
+        except Exception as e:
+            logger.error(f"Failed to download image from GCS: {e}")
+            # Fallback
+            prompt += f"\n(Image at {image_uri} could not be retrieved directly)"
+            parts[0] = Part.from_text(text=prompt)
     elif image_uri:
         prompt += f"\nThe receipt image is available at: {image_uri}"
-        parts = [types.Part.from_text(text=prompt)]
+        parts = [Part.from_text(text=prompt)]
         
     if user_id:
         prompt += f"\nThe user_id is: {user_id}. You MUST pass this user_id to the store_receipt_to_firestore tool."
-        parts[0] = types.Part.from_text(text=prompt)
+        parts[0] = Part.from_text(text=prompt)
 
     logger.info(f"Invoking agent for receipt {receipt_id}")
 
     try:
         from google.adk.runners import Runner
         from google.adk.sessions.in_memory_session_service import InMemorySessionService
-        from google.genai import types as genai_types
         from agent import root_agent
 
         session_service = InMemorySessionService()
@@ -101,7 +127,7 @@ async def process_receipt(request: Request):
         async for event in runner.run_async(
             user_id="system",
             session_id=session.id,
-            new_message=genai_types.Content(
+            new_message=Content(
                 role="user", parts=parts
             ),
         ):
@@ -110,11 +136,16 @@ async def process_receipt(request: Request):
                     if part.text:
                         logger.info(f"Agent: {part.text[:200]}")
 
-        # Finalise status
-        updated = doc_ref.get().to_dict()
-        if updated.get("status") == "processing":
-            doc_ref.update({"status": "completed"})
-
+        # Finalise status only if it hasn't been changed by a tool (like duplicate detection)
+        # We fetch the document again to see current status
+        updated_doc = doc_ref.get()
+        if updated_doc.exists:
+            current_status = updated_doc.to_dict().get("status")
+            if current_status == "processing":
+                doc_ref.update({"status": "completed"})
+            elif current_status == "duplicate":
+                logger.info(f"Receipt {receipt_id} marked as duplicate by tool.")
+        
         return {"status": "success", "receipt_id": receipt_id}
 
     except Exception as e:

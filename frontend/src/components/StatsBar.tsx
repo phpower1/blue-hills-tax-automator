@@ -11,10 +11,15 @@ interface Stat {
 }
 
 export default function StatsBar({ receipts }: { receipts: Receipt[] }) {
-    const total = receipts.length;
-    const totalAmount = receipts.reduce((sum, r) => sum + (r.amount || 0), 0);
-    const completed = receipts.filter((r) => r.status === "completed").length;
-    const processing = receipts.filter((r) => r.status === "processing").length;
+    const validReceipts = receipts.filter(r =>
+        r.status !== 'duplicate' &&
+        r.status !== 'failed' &&
+        r.status !== 'unknown'
+    );
+    const total = validReceipts.length;
+    const totalAmount = validReceipts.reduce((sum, r) => sum + (r.amount || 0), 0);
+    const completed = validReceipts.filter((r) => r.status === "completed").length;
+    const processing = validReceipts.filter((r) => r.status === "processing" || r.status === "new").length;
 
     const stats: Stat[] = [
         {

@@ -1,13 +1,45 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import Sidebar from "@/components/Sidebar";
 import LoginPage from "@/components/LoginPage";
+import { collection, query, where, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const processedDuplicates = useRef<Set<string>>(new Set());
+
+    // Global Duplicate Observer
+    useEffect(() => {
+        if (!user) return;
+
+        const q = query(
+            collection(db, "receipts"),
+            where("user_id", "==", user.uid),
+            where("status", "==", "duplicate")
+        );
+
+        const unsub = onSnapshot(q, (snapshot) => {
+            snapshot.docs.forEach(async (d) => {
+                if (processedDuplicates.current.has(d.id)) return;
+                processedDuplicates.current.add(d.id);
+
+                // Delay to ensure alert doesn't block UI thread unexpectedly
+                setTimeout(async () => {
+                    alert("⚠️ This receipt appears to be a duplicate and has already been processed!");
+                    try {
+                        await deleteDoc(doc(db, "receipts", d.id));
+                    } catch (err) {
+                        console.error("Failed to delete duplicate doc:", err);
+                    }
+                }, 100);
+            });
+        });
+
+        return unsub;
+    }, [user]);
 
     if (loading) {
         return (

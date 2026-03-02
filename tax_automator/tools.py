@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import firestore
 from typing import Optional
 import hashlib
+import logging
 
 # Initialize Firestore
 if not firebase_admin._apps:
@@ -53,15 +54,34 @@ def store_receipt_to_firestore(
             except (ValueError, TypeError):
                 continue
                 
-            if existing_amount == current_amount and doc_data.get('store', '').lower() == store.lower():
-                doc_ref.update({
+            # Case-insensitive merchant and amount match
+            existing_store = doc_data.get('store', '').lower()
+            current_store = (store or "Unknown Vendor").lower()
+            if existing_amount == current_amount and existing_store == current_store:
+                logger = logging.getLogger(__name__)
+                logger.info(f"Duplicate detected for receipt {receipt_id}. Original: {doc.id}")
+                
+                # Cleanup GCS image for the duplicate
+                try:
+                    current_doc = doc_ref.get().to_dict()
+                    gcs_uri = current_doc.get('gcs_uri')
+                    if gcs_uri and gcs_uri.startswith("gs://"):
+                        from firebase_admin import storage
+                        parts = gcs_uri.replace("gs://", "").split("/", 1)
+                        bucket = storage.bucket(parts[0])
+                        blob = bucket.blob(parts[1])
+                        blob.delete()
+                        logger.info(f"Deleted duplicate image: {gcs_uri}")
+                except Exception as e:
+                    logger.error(f"Failed to delete duplicate image: {e}")
+
+                # Clear data fields and mark as duplicate
+                doc_ref.set({
                     'status': 'duplicate',
-                    'store': store,
-                    'date': date,
-                    'amount': amount,
-                    'category': category
+                    'user_id': user_id,
+                    'created_at': firestore.SERVER_TIMESTAMP
                 })
-                return f"Duplicate receipt detected. Handled as 'duplicate'. Original ID: {doc.id}"
+                return f"Duplicate receipt detected. Image deleted and data cleared. Original ID: {doc.id}"
 
     doc_ref.update({
         'store': store,

@@ -1,5 +1,5 @@
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, limit } from "firebase/firestore";
 import { storage, db } from "./firebase";
 
 export interface UploadProgress {
@@ -12,6 +12,22 @@ export async function uploadReceipt(
     userId: string,
     onProgress?: (progress: UploadProgress) => void
 ): Promise<string> {
+    // 1. Pre-upload check for filename deduplication
+    // We avoid '!=' filter in query to prevent index requirements
+    const q = query(
+        collection(db, "receipts"),
+        where("user_id", "==", userId),
+        where("original_filename", "==", file.name),
+        limit(10)
+    );
+
+    const existing = await getDocs(q);
+    const isDuplicate = existing.docs.some(doc => doc.data().status !== 'failed');
+
+    if (isDuplicate) {
+        throw new Error("duplicate_filename");
+    }
+
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const storagePath = `receipts/${timestamp}_${safeName}`;
