@@ -155,6 +155,14 @@ export class GeminiLiveClient {
                                             },
                                         },
                                     },
+                                },
+                                {
+                                    name: "process_live_receipt",
+                                    description: "Triggers the system to capture a high-quality snapshot from the user's live video camera and process the receipt into the database. Use this when the user asks you to save, scan, or process the receipt they are currently showing you on camera. The tool will return a single timestamp as confirmation.",
+                                    parameters: {
+                                        type: "OBJECT",
+                                        properties: {} // No parameters needed
+                                    }
                                 }
                             ],
                         }

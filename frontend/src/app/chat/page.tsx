@@ -42,6 +42,9 @@ export default function ChatPage() {
     >("disconnected");
     const [micActive, setMicActive] = useState(false);
     const [cameraActive, setCameraActive] = useState(false);
+    const [cameraMaximized, setCameraMaximized] = useState(false);
+    const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+    const [currentCameraId, setCurrentCameraId] = useState<string | undefined>(undefined);
 
     const clientRef = useRef<GeminiLiveClient | null>(null);
     const micRef = useRef<MicCapture | null>(null);
@@ -50,6 +53,20 @@ export default function ChatPage() {
     const videoPreviewRef = useRef<HTMLDivElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const assistantBufferRef = useRef<string>("");
+
+    // Detect cameras on mount
+    useEffect(() => {
+        const detectCameras = async () => {
+            try {
+                const tempCam = new CameraCapture();
+                const cameras = await tempCam.getAvailableCameras();
+                setAvailableCameras(cameras);
+            } catch (err) {
+                console.error("Error detecting cameras:", err);
+            }
+        };
+        detectCameras();
+    }, []);
 
     // Auto-scroll
     useEffect(() => {
@@ -164,6 +181,26 @@ export default function ChatPage() {
                                         const { limit } = call.args as { limit?: number };
                                         const data = await getRecentReceipts(user.uid, limit);
                                         return { id: call.id, name: call.name, response: { receipts: data } };
+                                    } else if (call.name === "process_live_receipt") {
+                                        if (!cameraRef.current) {
+                                            return { id: call.id, name: call.name, response: { error: "Camera is not currently active." } };
+                                        }
+
+                                        const snapshotBlob = await cameraRef.current.takeSnapshot();
+                                        if (!snapshotBlob) {
+                                            return { id: call.id, name: call.name, response: { error: "Failed to take snapshot." } };
+                                        }
+
+                                        // Convert Blob to File to match uploadReceipt signature
+                                        const file = new File([snapshotBlob], `live_snapshot_${Date.now()}.jpg`, { type: "image/jpeg" });
+
+                                        // Upload the file using the existing upload method
+                                        // Note: We don't get a returned value directly from uploadReceipt,
+                                        // but it triggers the background Cloud Function, so we can just confirm success.
+                                        const { uploadReceipt } = await import("@/lib/storage");
+                                        await uploadReceipt(file, user.uid, () => { });
+
+                                        return { id: call.id, name: call.name, response: { success: true, timestamp: new Date().toISOString() } };
                                     }
                                     return { id: call.id, name: call.name, response: { error: "Unknown function" } };
                                 } catch (e) {
@@ -251,24 +288,66 @@ export default function ChatPage() {
             cameraRef.current = null;
             if (videoPreviewRef.current) videoPreviewRef.current.innerHTML = "";
             setCameraActive(false);
+            setCameraMaximized(false);
         } else {
             const cam = new CameraCapture();
             cam.onFrame = (b64) => {
                 clientRef.current?.sendVideo(b64);
             };
-            const videoEl = await cam.start();
+            const videoEl = await cam.start(currentCameraId);
             cameraRef.current = cam;
             if (videoPreviewRef.current) {
                 videoPreviewRef.current.innerHTML = "";
                 videoEl.style.width = "100%";
                 videoEl.style.height = "100%";
                 videoEl.style.objectFit = "cover";
-                videoEl.style.borderRadius = "50%";
                 videoPreviewRef.current.appendChild(videoEl);
             }
             setCameraActive(true);
+
+            // Refresh camera list after permission granted
+            const cameras = await cam.getAvailableCameras();
+            setAvailableCameras(cameras);
+
+            // On first start, capture the current device ID to initialize switcher correctly
+            if (!currentCameraId && cameras.length > 0) {
+                const activeTrack = cam.getVideoElement()?.srcObject;
+                if (activeTrack && 'getVideoTracks' in activeTrack) {
+                    const track = (activeTrack as MediaStream).getVideoTracks()[0];
+                    if (track && track.getSettings) {
+                        setCurrentCameraId(track.getSettings().deviceId);
+                    }
+                }
+            }
         }
-    }, [cameraActive]);
+    }, [cameraActive, currentCameraId]);
+
+    const switchCamera = useCallback(async () => {
+        if (!cameraActive || availableCameras.length < 2) return;
+
+        const idx = availableCameras.findIndex(c => c.deviceId === currentCameraId);
+        const currentIndex = idx === -1 ? 0 : idx;
+        const nextIndex = (currentIndex + 1) % availableCameras.length;
+        const nextCamera = availableCameras[nextIndex];
+
+        setCurrentCameraId(nextCamera.deviceId);
+
+        // Restart with new camera
+        cameraRef.current?.stop();
+        const cam = new CameraCapture();
+        cam.onFrame = (b64) => {
+            clientRef.current?.sendVideo(b64);
+        };
+        const videoEl = await cam.start(nextCamera.deviceId);
+        cameraRef.current = cam;
+        if (videoPreviewRef.current) {
+            videoPreviewRef.current.innerHTML = "";
+            videoEl.style.width = "100%";
+            videoEl.style.height = "100%";
+            videoEl.style.objectFit = "cover";
+            videoPreviewRef.current.appendChild(videoEl);
+        }
+    }, [cameraActive, availableCameras, currentCameraId]);
 
     // Auto-connect on mount, cleanup on unmount
     useEffect(() => {
@@ -369,6 +448,8 @@ export default function ChatPage() {
                         flex: 1,
                         overflow: "auto",
                         padding: "24px",
+                        position: "relative",
+                        zIndex: 1,
                     }}
                 >
                     {messages.length === 0 && (
@@ -399,27 +480,83 @@ export default function ChatPage() {
                     <div ref={chatEndRef} />
                 </div>
 
-                {/* Camera Preview */}
-                <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: cameraActive ? 1 : 0, opacity: cameraActive ? 1 : 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    ref={videoPreviewRef}
+                {/* Camera Preview Wrapper */}
+                <div
                     style={{
                         position: "absolute",
-                        bottom: 80,
-                        right: 24,
-                        width: 120,
-                        height: 120,
-                        borderRadius: "50%",
                         overflow: "hidden",
-                        border: "3px solid #06b6d4",
-                        boxShadow: "0 0 20px rgba(6, 182, 212, 0.3)",
+                        border: cameraMaximized ? "none" : "3px solid #06b6d4",
+                        boxShadow: cameraMaximized ? "none" : "0 0 20px rgba(6, 182, 212, 0.3)",
                         pointerEvents: cameraActive ? "auto" : "none",
                         backgroundColor: "#000",
                         zIndex: 10,
+                        opacity: cameraActive ? 1 : 0,
+                        transform: cameraActive ? "scale(1)" : "scale(0)",
+                        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                        transformOrigin: cameraMaximized ? "center" : "bottom right",
+                        ...(cameraMaximized ? {
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            borderRadius: 0,
+                        } : {
+                            bottom: 80,
+                            right: 24,
+                            width: 120,
+                            height: 120,
+                            borderRadius: "50%",
+                        })
                     }}
-                />
+                >
+                    <div ref={videoPreviewRef} style={{ width: "100%", height: "100%", position: "absolute", top: 0, left: 0, zIndex: 0 }} />
+                    {cameraActive && (
+                        <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 8, zIndex: 20 }}>
+                            {availableCameras.length > 1 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); switchCamera(); }}
+                                    style={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: "50%",
+                                        background: "rgba(0,0,0,0.5)",
+                                        border: "1px solid rgba(255,255,255,0.2)",
+                                        color: "#fff",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        cursor: "pointer",
+                                        fontSize: 14,
+                                        backdropFilter: "blur(4px)"
+                                    }}
+                                    title="Switch Camera"
+                                >
+                                    🔄
+                                </button>
+                            )}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setCameraMaximized(!cameraMaximized); }}
+                                style={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: "50%",
+                                    background: "rgba(0,0,0,0.5)",
+                                    border: "1px solid rgba(255,255,255,0.2)",
+                                    color: "#fff",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    cursor: "pointer",
+                                    fontSize: 14,
+                                    backdropFilter: "blur(4px)"
+                                }}
+                                title={cameraMaximized ? "Minimize" : "Maximize"}
+                            >
+                                {cameraMaximized ? "📉" : "📈"}
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Input Bar */}
                 <div
@@ -429,6 +566,8 @@ export default function ChatPage() {
                         display: "flex",
                         gap: 12,
                         alignItems: "center",
+                        position: "relative",
+                        zIndex: 1,
                     }}
                 >
                     {/* Mic Button */}

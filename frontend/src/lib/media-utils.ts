@@ -134,9 +134,20 @@ export class CameraCapture {
         return this.video;
     }
 
-    async start(): Promise<HTMLVideoElement> {
+    async start(deviceId?: string): Promise<HTMLVideoElement> {
+        const videoConstraints: MediaTrackConstraints = {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+        };
+
+        if (deviceId) {
+            videoConstraints.deviceId = { exact: deviceId };
+        } else {
+            videoConstraints.facingMode = "user";
+        }
+
         this.stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+            video: videoConstraints,
         });
 
         this.video = document.createElement("video");
@@ -160,6 +171,11 @@ export class CameraCapture {
         return this.video;
     }
 
+    async getAvailableCameras(): Promise<MediaDeviceInfo[]> {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        return devices.filter(device => device.kind === "videoinput");
+    }
+
     private captureFrame() {
         if (!this._active || !this.video || !this.canvas) return;
         const ctx = this.canvas.getContext("2d")!;
@@ -177,6 +193,25 @@ export class CameraCapture {
             "image/jpeg",
             0.7
         );
+    }
+
+    async takeSnapshot(): Promise<Blob | null> {
+        if (!this._active || !this.video) return null;
+
+        // Use a higher quality canvas for snapshots
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = this.video.videoWidth || 1280;
+        snapCanvas.height = this.video.videoHeight || 720;
+        const ctx = snapCanvas.getContext("2d")!;
+        ctx.drawImage(this.video, 0, 0, snapCanvas.width, snapCanvas.height);
+
+        return new Promise<Blob | null>((resolve) => {
+            snapCanvas.toBlob(
+                (blob) => resolve(blob),
+                "image/jpeg",
+                0.9
+            );
+        });
     }
 
     stop() {
