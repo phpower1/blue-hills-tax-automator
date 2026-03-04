@@ -13,7 +13,8 @@ gcloud run deploy tax-automator-agent `
     --platform managed `
     --region $REGION `
     --allow-unauthenticated `
-    --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_API_KEY=AIzaSyDIPF29CciIakXXWVKup7c6I7Et5KfvSGE"
+    --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID" `
+    --set-secrets "GOOGLE_API_KEY=GEMINI_API_KEY:latest"
 cd ..
 
 # 2. Deploy Telegram Bot
@@ -25,7 +26,8 @@ gcloud run deploy telegram-bot `
     --platform managed `
     --region $REGION `
     --allow-unauthenticated `
-    --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID,TELEGRAM_TOKEN=8536944890:AAHUSqgP3rlYwrSzsTdQpmGVPv7Cdy1h2Ik"
+    --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID" `
+    --set-secrets "TELEGRAM_TOKEN=TELEGRAM_TOKEN:latest"
 cd ..
 
 Write-Host "✅ All services deployed successfully!" -ForegroundColor Green
