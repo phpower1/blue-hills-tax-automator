@@ -14,11 +14,14 @@ app = FastAPI(title="Tax Automator Agent")
 
 @app.on_event("startup")
 async def startup_event():
-    api_key = os.environ.get("GOOGLE_API_KEY")
+    api_key = os.environ.get("GOOGLE_API_KEY", "").strip()
     if api_key:
         logger.info("GOOGLE_API_KEY is set")
     else:
         logger.warning("GOOGLE_API_KEY is NOT set")
+
+    PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "blue-hills-tax-automator").strip()
+    os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID # Ensure it's clean for other uses
 
 
 @app.get("/")

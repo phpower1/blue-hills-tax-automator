@@ -16,9 +16,9 @@ from vertexai.generative_models import GenerativeModel, Part, Image, Tool, Funct
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "blue-hills-tax-automator")
-REGION = os.environ.get("GOOGLE_CLOUD_REGION", "us-central1")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "blue-hills-tax-automator").strip()
+REGION = os.environ.get("GOOGLE_CLOUD_REGION", "us-central1").strip()
 
 # ─── Init Firebase ───
 if not firebase_admin._apps:
@@ -197,7 +197,11 @@ def store_receipt(data: dict, telegram_user: str, firebase_uid: str, image_url: 
     """Store receipt to Firestore using deterministic ID to prevent duplicates."""
     store = data.get('store', 'Unknown')
     date = data.get('date', datetime.now().strftime('%Y-%m-%d'))
-    amount = float(data.get('amount', 0))
+    amount = 0.0
+    try:
+        amount = float(data.get('amount', 0))
+    except (ValueError, TypeError):
+        pass
     
     unique_string = f"{store.strip().lower()}_{date.strip()}_{amount}"
     doc_id = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
@@ -215,7 +219,7 @@ def store_receipt(data: dict, telegram_user: str, firebase_uid: str, image_url: 
         'source': 'telegram',
         'telegram_user': telegram_user,
         'user_id': firebase_uid,
-        'status': 'processed' if amount < 500 else 'needs_approval',
+        'status': 'processed',
         'created_at': firestore.SERVER_TIMESTAMP,
     }
     if image_url:
@@ -276,8 +280,13 @@ async def handle_photo(update: Update, bot: Bot):
         doc_id = store_receipt(data, username, firebase_uid, image_url=image_url, gcs_uri=gcs_uri)
 
         # Format response
-        amount = float(data.get('amount', 0))
-        status = "⚠️ Needs Approval (>$500)" if amount >= 500 else "✅ Processed"
+        amount = 0.0
+        try:
+            amount = float(data.get('amount', 0))
+        except (ValueError, TypeError):
+            pass
+
+        status = "✅ Processed"
 
         reply = (
             f"🧾 Receipt Processed!\n\n"

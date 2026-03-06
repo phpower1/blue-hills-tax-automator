@@ -49,7 +49,6 @@ def store_receipt_to_firestore(
             if doc.id == receipt_id:
                 continue
             doc_data = doc.to_dict()
-            # Avoid ValueError on casting amount if it's missing/bad
             try:
                 existing_amount = float(doc_data.get('amount', 0))
                 current_amount = float(amount)
@@ -85,13 +84,18 @@ def store_receipt_to_firestore(
                 })
                 return f"Duplicate receipt detected. Image deleted and data cleared. Original ID: {doc.id}"
 
+    try:
+        safe_amount = float(amount)
+    except (ValueError, TypeError):
+        safe_amount = 0.0
+
     doc_ref.update({
         'store': store,
         'date': date,
-        'amount': amount,
+        'amount': safe_amount,
         'category': category,
         'description': description,
-        'status': 'processed' if float(amount) < 500 else 'needs_approval'
+        'status': 'processed'
     })
     return f"Receipt updated successfully with ID: {doc_ref.id}"
 

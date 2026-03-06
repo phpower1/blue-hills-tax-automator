@@ -9,6 +9,7 @@ import {
     limit,
     deleteDoc,
     doc,
+    updateDoc,
     type DocumentData,
     type QuerySnapshot,
 } from "firebase/firestore";
@@ -161,4 +162,9 @@ export async function deleteReceipt(receipt: Receipt): Promise<void> {
 
     // Delete Firestore document
     await deleteDoc(doc(db, "receipts", receipt.id));
+}
+
+export async function updateReceipt(id: string, updates: Partial<Receipt>): Promise<void> {
+    const receiptRef = doc(db, "receipts", id);
+    await updateDoc(receiptRef, updates);
 }

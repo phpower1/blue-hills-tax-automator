@@ -1,0 +1,44 @@
+[
+  {
+    "id": "DvYKjvFjxraHsQ1epfvN",
+    "status": "processed",
+    "store": "Unknown Vendor",
+    "amount": 16,
+    "date": "2012-11-25"
+  },
+  {
+    "id": "bWD3LBV4Id8qNwBet3eq",
+    "status": "processed",
+    "store": "BLUE HILL EXPRESS",
+    "amount": 24,
+    "date": "2025-10-25"
+  },
+  {
+    "id": "sCa3XPq9wtxOGBELtWLx",
+    "status": "processed",
+    "store": "The Home Depot",
+    "amount": 1292.19,
+    "date": "2025-02-07"
+  },
+  {
+    "id": "uFqV4wLiLskzlM98Tepe",
+    "status": "processed",
+    "store": "Costco Wholesale",
+    "amount": 19.99,
+    "date": "2025-11-28"
+  },
+  {
+    "id": "woH0DfmJuFPQkaXeuaUu",
+    "status": "processed",
+    "store": "Unknown Vendor",
+    "amount": 38.26,
+    "date": "2025-10-14"
+  },
+  {
+    "id": "xoft7lSsUoqNDMqWbX7W",
+    "status": "completed",
+    "store": null,
+    "amount": null,
+    "date": null
+  }
+]
